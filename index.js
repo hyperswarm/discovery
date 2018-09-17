@@ -159,6 +159,28 @@ class Discovery extends EventEmitter {
 
     this._tld = '.' + domain
     this._domains = new Map()
+    this._bootstrap = this.dht.dht._bootstrap
+  }
+
+  ping (cb) {
+    const res = []
+    const len = this._bootstrap.length
+
+    if (!len) {
+      return process.nextTick(cb, new Error('No bootstrap nodes available'))
+    }
+
+    var missing = len
+    const start = Date.now()
+
+    for (const bootstrap of this._bootstrap) {
+      this.dht.ping(bootstrap, function (_, pong) {
+        if (pong) res.push({bootstrap, rtt: Date.now() - start, pong})
+        if (--missing) return
+        if (!res.length) return cb(new Error('All bootstrap nodes failed'))
+        cb(null, res)
+      })
+    }
   }
 
   lookupOne (key, cb) {

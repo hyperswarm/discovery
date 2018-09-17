@@ -86,6 +86,26 @@ from the network as well
 
 Find a single peer and returns that to the callback.
 
+#### `d.ping(cb)`
+
+Ping all bootstrap servers. Returns an array of results:
+
+```
+[
+  {
+    bootstrap: (bootstrap node that replied),
+    rtt: (round trip time in ms),
+    pong: {
+      host: (your ip),
+      port: (your port)
+    }
+  }
+]
+```
+
+If your IP and port is consistent across the bootstrap nodes
+holepunching *usually* works.
+
 #### `d.holepunch(peer, cb)`
 
 UDP holepunch to another peer.
