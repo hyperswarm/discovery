@@ -154,6 +154,21 @@ class Discovery extends EventEmitter {
     this._domains = new Map()
   }
 
+  lookupOne (key, cb) {
+    const onclose = () => cb(new Error('Lookup failed'))
+
+    this.lookup(key)
+      .on('close', onclose)
+      .once('peer', onpeer)
+
+    function onpeer (peer, local, referrer) {
+      this.removeListener('close', onclose)
+      this.destroy()
+
+      cb(null, peer, local, referrer)
+    }
+  }
+
   lookup (key) {
     if (this.destroyed) throw new Error('Discovery instance is destroyed')
 

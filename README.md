@@ -82,6 +82,10 @@ Options include:
 When the topic is destroyed the port will be explicitly unannounced
 from the network as well
 
+#### `d.lookupOne(key, cb)`
+
+Find a single peer and returns that to the callback.
+
 #### `d.holepunch(peer, referrer, cb)`
 
 UDP holepunch to another peer.
