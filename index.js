@@ -175,6 +175,10 @@ class Discovery extends EventEmitter {
     return topic
   }
 
+  holepunch (peer, referrer, cb) {
+    this.dht.holepunch(peer, referrer, cb)
+  }
+
   destroy () {
     if (this.destroyed) return
     this.destroyed = true

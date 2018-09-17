@@ -77,6 +77,10 @@ Options include:
 When the topic is destroyed the port will be explicitly unannounced
 from the network as well
 
+#### `d.holepunch(peer, referrer, cb)`
+
+UDP holepunch to another peer.
+
 #### `d.destroy()`
 
 Fully destroy the discovery instance, and it's underlying resources.
