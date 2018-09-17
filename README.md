@@ -50,7 +50,7 @@ Start looking for peers shared on `key`, which should be a 32 byte buffer.
 
 * `topic.destroy()` - Call this to stop looking for peers
 * `topic.update()` - Call this to force update
-* `topic.on('update') - Emitted when a peer discovery cycle has finished
+* `topic.on('update')` - Emitted when a peer discovery cycle has finished
 * `topic.on('peer', peer, isLocal, referrer)` - Emitted when a peer is found
 * `topic.on('close')` - Emitted when this topic is fully closed
 
