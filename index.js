@@ -63,10 +63,10 @@ class Topic extends EventEmitter {
 
     const referrer = data.node
     for (const peer of data.localPeers) {
-      this.emit('peer', peer, true, null)
+      this.emit('peer', { port: peer.port, host: peer.host, local: true, referrer: null })
     }
     for (const peer of data.peers) {
-      this.emit('peer', peer, false, referrer)
+      this.emit('peer', { port: peer.port, host: peer.host, local: false, referrer })
     }
   }
 
@@ -161,11 +161,11 @@ class Discovery extends EventEmitter {
       .on('close', onclose)
       .once('peer', onpeer)
 
-    function onpeer (peer, local, referrer) {
+    function onpeer (peer) {
       this.removeListener('close', onclose)
       this.destroy()
 
-      cb(null, peer, local, referrer)
+      cb(null, peer)
     }
   }
 
@@ -190,8 +190,9 @@ class Discovery extends EventEmitter {
     return topic
   }
 
-  holepunch (peer, referrer, cb) {
-    this.dht.holepunch(peer, referrer, cb)
+  holepunch (peer, cb) {
+    if (!peer.referrer) return process.nextTick(new Error('Referrer needed to holepunch'))
+    this.dht.holepunch(peer, peer.referrer, cb)
   }
 
   destroy () {
@@ -241,7 +242,7 @@ class Discovery extends EventEmitter {
         : a.data.target
 
       for (const topic of set) {
-        topic.emit('peer', { host, port: a.data.port }, true, null)
+        topic.emit('peer', { host, port: a.data.port, local: true, referrer: null })
       }
     }
   }

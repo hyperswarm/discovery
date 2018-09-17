@@ -53,7 +53,7 @@ Start looking for peers shared on `key`, which should be a 32 byte buffer.
 * `topic.destroy()` - Call this to stop looking for peers
 * `topic.update()` - Call this to force update
 * `topic.on('update')` - Emitted when a peer discovery cycle has finished
-* `topic.on('peer', peer, isLocal, referrer)` - Emitted when a peer is found
+* `topic.on('peer', peer)` - Emitted when a peer is found
 * `topic.on('close')` - Emitted when this topic is fully closed
 
 It is up to you to call `.destroy()` when you don't wanna look for anymore peers.
@@ -86,7 +86,7 @@ from the network as well
 
 Find a single peer and returns that to the callback.
 
-#### `d.holepunch(peer, referrer, cb)`
+#### `d.holepunch(peer, cb)`
 
 UDP holepunch to another peer.
 
