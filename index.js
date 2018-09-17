@@ -1,6 +1,7 @@
 const dht = require('hyperdht')
 const multicast = require('multicast-dns')
 const { EventEmitter } = require('events')
+const crypto = require('crypto')
 
 module.exports = opts => new Discovery(opts)
 
@@ -13,6 +14,7 @@ class Topic extends EventEmitter {
     this.key = key
     this.announce = opts.announce || null
     this.destroyed = false
+    this.id = Buffer.concat([Buffer.from('id='), crypto.randomBytes(32)])
 
     const port = opts.localPort || 0
     const name = discovery._domain(key)
@@ -77,6 +79,11 @@ class Topic extends EventEmitter {
       questions: [{
         type: 'SRV',
         name: this._domain
+      }],
+      answers: [{
+        type: 'TXT',
+        name: this._domain,
+        data: [this.id]
       }]
     }
 
@@ -221,6 +228,15 @@ class Discovery extends EventEmitter {
     }
   }
 
+  _getId (res, name) {
+    for (const a of res.answers) {
+      if (a.type === 'TXT' && a.name === name && a.data.length) {
+        return a.data[0]
+      }
+    }
+    return null
+  }
+
   _topic (key, ann) {
     const topic = new Topic(this, key, ann)
     const domain = this._domain(key)
@@ -254,7 +270,9 @@ class Discovery extends EventEmitter {
       const set = q.type === 'SRV' && this._domains.get(q.name)
       if (!set) continue
 
+      const id = this._getId(res, q.name)
       for (const topic of set) {
+        if (id && topic.id.equals(id)) continue
         if (topic._answer) r.answers.push(topic._answer)
       }
     }

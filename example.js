@@ -3,14 +3,17 @@ const discovery = require('./')
 const d = discovery()
 const k = Buffer.alloc(32)
 
-const topic = d.lookup(k)
+//const topic = d.lookup(k)
 
-topic.on('peer', peer => console.log('peer:', peer))
+//topic.on('peer', peer => console.log('peer:', peer))
+
 
 d.announce(k, {
-  port: 10000
-})
+  port: 10000,
+  lookup: true
+}).on('peer', console.log)
 
+return
 const ann = d.announce(k, {
   port: 10101
 })
