@@ -37,8 +37,10 @@ Options include:
 {
   // Optionally overwrite the default set of bootstrap servers
   bootstrap: [addresses],
-  // Set to true if this is a long running instance on a server
-  ephemeral: false,
+  // Set to false if this is a long running instance on a server
+  // When running in ephemeral mode (default) you don't join the
+  // DHT but just query it instead.
+  ephemeral: true,
   // Pass in your own udp/utp socket (needed for hole punching)
   socket: (a udp or utp socket)
 }
@@ -56,6 +58,9 @@ Start looking for peers shared on `key`, which should be a 32 byte buffer.
 
 It is up to you to call `.destroy()` when you don't wanna look for anymore peers.
 Note that the same peer might be emitted multiple times.
+
+An update cycle indicates that you are done querying the DHT and that
+the topic instance will sleep for a bit (~5-10min) before querying it again
 
 #### `topic = d.announce(key, options)`
 
