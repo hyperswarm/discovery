@@ -27,7 +27,7 @@ class Topic extends EventEmitter {
     this._answer = port
       ? { type: 'SRV', name, data: { target: '0.0.0.0', port } }
       : null
-
+    this._idAnswer = { type: 'TXT', name, data: [ this.id ] }
     this._startDht()
     if (!this.announce || opts.lookup) this._startMdns()
   }
@@ -79,11 +79,6 @@ class Topic extends EventEmitter {
       questions: [{
         type: 'SRV',
         name: this._domain
-      }],
-      answers: [{
-        type: 'TXT',
-        name: this._domain,
-        data: [this.id]
       }]
     }
 
@@ -175,7 +170,7 @@ class Discovery extends EventEmitter {
 
     for (const bootstrap of this._bootstrap) {
       this.dht.ping(bootstrap, function (_, pong) {
-        if (pong) res.push({bootstrap, rtt: Date.now() - start, pong})
+        if (pong) res.push({ bootstrap, rtt: Date.now() - start, pong })
         if (--missing) return
         if (!res.length) return cb(new Error('All bootstrap nodes failed'))
         cb(null, res)
@@ -278,8 +273,10 @@ class Discovery extends EventEmitter {
       const host = a.data.target === '0.0.0.0'
         ? rinfo.address
         : a.data.target
+      const id = this._getId(res, a.name)
 
       for (const topic of set) {
+        if (id && id.equals(topic.id)) continue
         topic.emit('peer', { host, port: a.data.port, local: true, referrer: null })
       }
     }
@@ -295,11 +292,14 @@ class Discovery extends EventEmitter {
       const id = this._getId(res, q.name)
       for (const topic of set) {
         if (id && topic.id.equals(id)) continue
-        if (topic._answer) r.answers.push(topic._answer)
+        if (topic._answer) {
+          r.answers.push(topic._answer)
+          r.answers.push(topic._idAnswer)
+        }
       }
     }
 
-    this.mdns.response(r)
+    if (r.answers.length) this.mdns.response(r)
   }
 
   _domain (key) {
