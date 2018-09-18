@@ -178,6 +178,22 @@ class Discovery extends EventEmitter {
     }
   }
 
+  holepunchable (cb) {
+    this.ping(function (err, res) {
+      if (err) return cb(err)
+      if (res.length < 2) return cb(new Error('Not enough bootstrap nodes replied'))
+      const first = res[0].pong
+      for (var i = 1; i < res.length; i++) {
+        const pong = res[i].pong
+        if (pong.host !== first.host || pong.port !== first.port) {
+          return cb(null, false)
+        }
+      }
+
+      cb(null, true)
+    })
+  }
+
   lookupOne (key, cb) {
     const onclose = () => cb(new Error('Lookup failed'))
 
