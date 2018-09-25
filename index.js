@@ -226,7 +226,7 @@ class Discovery extends EventEmitter {
 
   holepunch (peer, cb) {
     if (!peer.referrer) return process.nextTick(new Error('Referrer needed to holepunch'))
-    this.dht.holepunch(peer, peer.referrer, cb)
+    this.dht.holepunch(peer, cb)
   }
 
   destroy () {
