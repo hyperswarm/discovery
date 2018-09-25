@@ -3,6 +3,8 @@ const multicast = require('multicast-dns')
 const { EventEmitter } = require('events')
 const crypto = require('crypto')
 
+const EMPTY = []
+
 module.exports = opts => new Discovery(opts)
 
 class Topic extends EventEmitter {
@@ -64,10 +66,10 @@ class Topic extends EventEmitter {
     if (this.destroyed) return
 
     const referrer = data.node
-    for (const peer of data.localPeers) {
+    for (const peer of (data.localPeers || EMPTY)) {
       this.emit('peer', { port: peer.port, host: peer.host, local: true, referrer: null })
     }
-    for (const peer of data.peers) {
+    for (const peer of (data.peers || EMPTY)) {
       this.emit('peer', { port: peer.port, host: peer.host, local: false, referrer })
     }
   }
