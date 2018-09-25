@@ -1,4 +1,4 @@
-const dht = require('hyperdht')
+const dht = require('@hyperswarm/dht')
 const multicast = require('multicast-dns')
 const { EventEmitter } = require('events')
 const crypto = require('crypto')
@@ -133,14 +133,6 @@ class Discovery extends EventEmitter {
 
     if (!opts) opts = {}
 
-    if (!opts.bootstrap) {
-      opts.bootstrap = [
-        'bootstrap1.hyperdht.org',
-        'bootstrap2.hyperdht.org',
-        'bootstrap3.hyperdht.org'
-      ]
-    }
-
     opts.ephemeral = opts.ephemeral !== false
 
     this.destroyed = false
@@ -154,7 +146,7 @@ class Discovery extends EventEmitter {
 
     this._tld = '.' + domain
     this._domains = new Map()
-    this._bootstrap = this.dht.dht._bootstrap
+    this._bootstrap = this.dht.bootstrapNodes
   }
 
   ping (cb) {
