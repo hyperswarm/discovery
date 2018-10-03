@@ -65,12 +65,13 @@ class Topic extends EventEmitter {
   _ondhtdata (data) {
     if (this.destroyed) return
 
+    const topic = this.key
     const referrer = data.node
     for (const peer of (data.localPeers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, local: true, referrer: null })
+      this.emit('peer', { port: peer.port, host: peer.host, local: true, referrer: null, topic })
     }
     for (const peer of (data.peers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, local: false, referrer })
+      this.emit('peer', { port: peer.port, host: peer.host, local: false, referrer, topic })
     }
   }
 
@@ -287,7 +288,7 @@ class Discovery extends EventEmitter {
 
       for (const topic of set) {
         if (id && id.equals(topic.id)) continue
-        topic.emit('peer', { host, port: a.data.port, local: true, referrer: null })
+        topic.emit('peer', { host, port: a.data.port, local: true, referrer: null, topic: topic.key })
       }
     }
   }
