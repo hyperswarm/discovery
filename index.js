@@ -288,7 +288,7 @@ class Discovery extends EventEmitter {
 
       for (const topic of set) {
         if (id && id.equals(topic.id)) continue
-        topic.emit('peer', { host, port: a.data.port, local: true, referrer: null, topic: topic.key })
+        topic.emit('peer', { port: a.data.port, host, local: true, referrer: null, topic: topic.key })
       }
     }
   }
