@@ -140,7 +140,7 @@ class Discovery extends EventEmitter {
 
     this.destroyed = false
     this.dht = dht(opts)
-    this.mdns = multicast()
+    this.mdns = opts.multicast || multicast()
 
     this.mdns.on('query', this._onmdnsquery.bind(this))
     this.mdns.on('response', this._onmdnsresponse.bind(this))
