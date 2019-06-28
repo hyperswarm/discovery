@@ -230,14 +230,17 @@ class Discovery extends EventEmitter {
     this.dht.holepunch(peer, cb)
   }
 
-  destroy () {
+  destroy (opts) {
     if (this.destroyed) return
     this.destroyed = true
+
+    if (!opts) opts = {}
 
     const self = this
     var missing = 1
 
     this.mdns.destroy()
+    if (opts.force) return process.nextTick(done)
 
     for (const set of this._domains.values()) {
       for (const topic of set) {
