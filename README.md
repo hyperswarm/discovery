@@ -82,6 +82,15 @@ Options include:
 When the topic is destroyed the port will be explicitly unannounced
 from the network as well
 
+#### `d.unnanounce(topic, cb)`
+
+The topic returned from `d.announce` can be passed in to `d.unnanounce` 
+to stop announcing the topic. 
+
+#### `topic.unnanounce(cb)`
+
+Unnanounce a topic, this is the same as passing a `topic` into `d.unnanounce`.
+
 #### `d.lookupOne(key, cb)`
 
 Find a single peer and returns that to the callback.

@@ -44,7 +44,9 @@ class Topic extends EventEmitter {
     clearTimeout(this._timeoutMdns)
     this._startMdns()
   }
-
+  unannounce (cb) {
+    this._discovery.dht.unannounce(this.key, this.announce, cb ? cb : (err) => { throw err })
+  }
   destroy () {
     if (this.destroyed) return
     this.destroyed = true
@@ -64,7 +66,7 @@ class Topic extends EventEmitter {
 
   _ondhtdata (data) {
     if (this.destroyed) return
-
+ 
     const topic = this.key
     const referrer = data.node
     for (const peer of (data.localPeers || EMPTY)) {
@@ -111,6 +113,7 @@ class Topic extends EventEmitter {
       var called = false
 
       const ann = self.announce
+      
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key)
       self._timeoutDht = null
       self._stream = stream
@@ -137,9 +140,9 @@ class Discovery extends EventEmitter {
     if (!opts) opts = {}
 
     opts.ephemeral = opts.ephemeral !== false
-
     this.destroyed = false
     this.dht = dht(opts)
+
     this.mdns = opts.multicast || multicast()
 
     this.mdns.on('query', this._onmdnsquery.bind(this))
@@ -212,7 +215,7 @@ class Discovery extends EventEmitter {
 
   announce (key, opts) {
     if (this.destroyed) throw new Error('Discovery instance is destroyed')
-
+    
     const topic = this._topic(key, {
       localPort: opts.localPort || opts.port || 0,
       lookup: opts && opts.lookup,
@@ -223,6 +226,10 @@ class Discovery extends EventEmitter {
     })
 
     return topic
+  }
+
+  unannounce (topic, cb) {
+    return topic.unannounce(cb)
   }
 
   holepunch (peer, cb) {
@@ -309,7 +316,6 @@ class Discovery extends EventEmitter {
         }
       }
     }
-
     if (r.answers.length) this.mdns.response(r)
   }
 
