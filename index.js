@@ -32,6 +32,14 @@ class Topic extends EventEmitter {
     this._idAnswer = { type: 'TXT', name, data: [ this.id ] }
     this._startDht()
     if (!this.announce || opts.lookup) this._startMdns()
+    if (this.announce) process.nextTick(this._fireAnnounce.bind(this))
+  }
+
+  _fireAnnounce () { // firing once right away make lookup, then announce much faster
+    this._discovery._onmdnsquery({
+      questions: [{ type: 'SRV', name: this._domain }],
+      answers: []
+    })
   }
 
   update () {
