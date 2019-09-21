@@ -33,6 +33,14 @@ class Topic extends EventEmitter {
     this._startDht()
     if (!this.announce || opts.lookup) this._startMdns()
     if (this.announce) process.nextTick(this._fireAnnounce.bind(this))
+
+    this._onannounce = (target, peer) => {
+      if (target.equals(this.key)) {
+        this.emit('peer', { port: peer.port, host: peer.host, local: false, referrer: null, topic: this.key })
+      }
+    }
+
+    this._discovery.dht.on('announce', this._onannounce)
   }
 
   _fireAnnounce () { // firing once right away make lookup, then announce much faster
@@ -56,6 +64,8 @@ class Topic extends EventEmitter {
   destroy () {
     if (this.destroyed) return
     this.destroyed = true
+
+    this._discovery.dht.removeListener('announce', this._onannounce)
 
     this._stopDht()
     clearTimeout(this._timeoutMdns)
