@@ -197,10 +197,11 @@ class Discovery extends EventEmitter {
     })
   }
 
-  lookupOne (key, cb) {
+  lookupOne (key, opts, cb) {
+    if (typeof opts === 'function') return this.lookupOne(key, null, opts)
     const onclose = () => cb(new Error('Lookup failed'))
 
-    this.lookup(key)
+    this.lookup(key, opts)
       .on('close', onclose)
       .once('peer', onpeer)
 
