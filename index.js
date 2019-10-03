@@ -15,6 +15,7 @@ class Topic extends EventEmitter {
 
     this.key = key
     this.announce = opts.announce || null
+    this.lookup = opts.lookup || null
     this.destroyed = false
     this.id = Buffer.concat([Buffer.from('id='), crypto.randomBytes(32)])
 
@@ -119,7 +120,7 @@ class Topic extends EventEmitter {
       var called = false
 
       const ann = self.announce
-      const stream = ann ? dht.announce(key, ann) : dht.lookup(key)
+      const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
       self._timeoutDht = null
       self._stream = stream
 
@@ -213,10 +214,12 @@ class Discovery extends EventEmitter {
     }
   }
 
-  lookup (key) {
+  lookup (key, opts) {
     if (this.destroyed) throw new Error('Discovery instance is destroyed')
 
-    return this._topic(key)
+    return this._topic(key, {
+      lookup: opts || null
+    })
   }
 
   announce (key, opts) {
@@ -277,8 +280,8 @@ class Discovery extends EventEmitter {
     return null
   }
 
-  _topic (key, ann) {
-    const topic = new Topic(this, key, ann)
+  _topic (key, opts) {
+    const topic = new Topic(this, key, opts)
     const domain = this._domain(key)
     if (!this._domains.has(domain)) {
       this._domains.set(domain, new Set())
