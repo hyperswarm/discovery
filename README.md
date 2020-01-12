@@ -38,9 +38,11 @@ Options include:
   // Optionally overwrite the default set of bootstrap servers
   bootstrap: [addresses],
   // Set to false if this is a long running instance on a server
-  // When running in ephemeral mode (default) you don't join the
-  // DHT but just query it instead.
-  ephemeral: true,
+  // When running in ephemeral mode you don't join the DHT but just 
+  // query it instead. If unset, or set to a non-boolean (default undefined)
+  // then the node will start in short-lived (ephemeral) mode and switch 
+  // to long-lived (non-ephemeral) mode after a certain period of uptime
+  ephemeral: undefined,
   // Pass in your own udp/utp socket (needed for hole punching)
   socket: (a udp or utp socket)
 }
