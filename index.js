@@ -22,6 +22,7 @@ class Topic extends EventEmitter {
     const port = opts.localPort || 0
     const name = discovery._domain(key)
 
+    this._flush = []
     this._discovery = discovery
     this._timeoutDht = null
     this._timeoutMdns = null
@@ -40,7 +41,7 @@ class Topic extends EventEmitter {
     this._discovery._onmdnsquery({
       questions: [{ type: 'SRV', name: this._domain }],
       answers: []
-    })
+    }, null)
   }
 
   update () {
@@ -52,6 +53,14 @@ class Topic extends EventEmitter {
     }
     clearTimeout(this._timeoutMdns)
     this._startMdns()
+  }
+
+  flush (cb) {
+    if (this._stream) {
+      this._flush.push(cb)
+    } else {
+      cb()
+    }
   }
 
   destroy () {
@@ -106,6 +115,10 @@ class Topic extends EventEmitter {
     clearTimeout(this._timeoutDht)
     this._timeoutDht = null
     if (this._stream) this._stream.destroy()
+
+    const flush = this._flush
+    this._flush = []
+    for (const cb of flush) cb(null)
   }
 
   _startDht () {
@@ -127,6 +140,7 @@ class Topic extends EventEmitter {
       stream.on('data', ondata)
       stream.on('error', done)
       stream.on('end', done)
+      stream.on('close', done)
 
       function done (err) {
         if (called || self.destroyed) return
@@ -134,6 +148,10 @@ class Topic extends EventEmitter {
         called = true
         self.emit('update', err)
         self._timeoutDht = self._discovery._notify(loop, false)
+
+        const flush = self._flush
+        self._flush = []
+        for (const cb of flush) cb(err)
       }
     }
   }
@@ -196,6 +214,23 @@ class Discovery extends EventEmitter {
 
       cb(null, true)
     })
+  }
+
+  flush (cb) {
+    let missing = 1
+
+    for (const set of this._domains.values()) {
+      for (const topic of set) {
+        missing++
+        topic.flush(onflush)
+      }
+    }
+
+    onflush()
+
+    function onflush () {
+      if (!--missing) cb()
+    }
   }
 
   lookupOne (key, opts, cb) {
@@ -308,7 +343,7 @@ class Discovery extends EventEmitter {
     }
   }
 
-  _onmdnsquery (res) {
+  _onmdnsquery (res, rinfo) {
     const r = { answers: [] }
 
     for (const q of res.questions) {
@@ -325,7 +360,14 @@ class Discovery extends EventEmitter {
       }
     }
 
-    if (r.answers.length) this.mdns.response(r)
+    if (r.answers.length && rinfo) {
+      r.answers.push({
+        type: 'A',
+        name: 'referrer' + this._tld,
+        data: rinfo.address
+      })
+      this.mdns.response(r)
+    }
   }
 
   _domain (key) {

@@ -11,7 +11,7 @@ test('setup bootstrap', t => {
     t.error(err)
 
     bootstrapPort = bootstrap.socket.address().port
-    console.log('bootstrap listening at', `127.0.0.1:${bootstrapPort}`)
+    t.pass(`bootstrap listening at 127.0.0.1:${bootstrapPort}`)
     t.end()
   })
 })
@@ -51,7 +51,6 @@ test('announce & lookup', t => {
   lookup.on('peer', (peer) => {
     clearTimeout(to)
 
-    console.log('got peer', peer)
     t.equal(peer.port, port, 'peer port is as expected')
     t.ok(typeof peer.host === 'string', 'peer host string is included')
     t.equal(peer.local, true, 'peer was local')
@@ -81,7 +80,6 @@ test('announce & lookupOne', t => {
     clearTimeout(to)
     t.error(err)
 
-    console.log('got peer', peer)
     t.equal(peer.port, port, 'peer port is as expected')
     t.ok(typeof peer.host === 'string', 'peer host string is included')
     t.equal(peer.local, true, 'peer was local')
@@ -113,7 +111,6 @@ test('announce & announce with lookup = true', t => {
   var hits = 2
   function onPeer (port) {
     return (peer) => {
-      console.log('got peer', peer)
       t.equal(peer.port, port, 'peer port is as expected')
       t.ok(typeof peer.host === 'string', 'peer host string is included')
       t.equal(peer.local, true, 'peer was local')
@@ -130,6 +127,38 @@ test('announce & announce with lookup = true', t => {
 
   ann1.on('peer', onPeer(port2))
   ann2.on('peer', onPeer(port1))
+})
+
+test('flush discovery', t => {
+  const key = crypto.randomBytes(32)
+  const d1 = inst({ ephemeral: false })
+  const d2 = inst({ ephemeral: false })
+
+  d2.dht.bootstrap(() => {
+    d1.flush(function () {
+      d1.announce(key, { port: 1001 })
+      d1.announce(key, { port: 1002 })
+      d1.flush(function () {
+        const peers = []
+        d1.lookup(key).on('peer', function (peer) {
+          peers.push(peer.port)
+
+          if (peers.length === 4) {
+            peers.sort()
+            t.same(peers, [
+              1001,
+              1001,
+              1002,
+              1002
+            ])
+            d1.destroy()
+            d2.destroy()
+            t.end()
+          }
+        })
+      })
+    })
+  })
 })
 
 test.onFinish(() => {

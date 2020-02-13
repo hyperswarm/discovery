@@ -110,6 +110,10 @@ holepunching *usually* works.
 
 UDP holepunch to another peer.
 
+#### `d.flush(cb)`
+
+Call the callback when all pending DHT operations are fully flushed.
+
 #### `d.destroy()`
 
 Fully destroy the discovery instance, and it's underlying resources.
