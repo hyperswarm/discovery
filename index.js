@@ -131,13 +131,22 @@ class Topic extends EventEmitter {
 
     function loop () {
       var called = false
+      var flushed = false
+      var flushTimeout = null
 
       const ann = self.announce
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
       self._timeoutDht = null
       self._stream = stream
 
-      stream.on('data', ondata)
+      stream.on('data', function (data) {
+        if (!flushed) {
+          if (flushTimeout) flushTimeout.refresh()
+          else flushTimeout = setTimeout(onflush, 1000)
+        }
+        ondata(data)
+      })
+
       stream.on('error', done)
       stream.on('end', done)
       stream.on('close', done)
@@ -148,7 +157,13 @@ class Topic extends EventEmitter {
         called = true
         self.emit('update', err)
         self._timeoutDht = self._discovery._notify(loop, false)
+        onflush(err)
+      }
 
+      function onflush (err) {
+        if (flushTimeout) clearTimeout(flushTimeout)
+        if (flushed) return
+        flushed = true
         const flush = self._flush
         self._flush = []
         for (const cb of flush) cb(err)
