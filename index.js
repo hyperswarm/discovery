@@ -85,11 +85,12 @@ class Topic extends EventEmitter {
 
     const topic = this.key
     const referrer = data.node
+    const to = data.to
     for (const peer of (data.localPeers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, local: true, referrer: null, topic })
+      this.emit('peer', { port: peer.port, host: peer.host, local: true, to, referrer: null, topic })
     }
     for (const peer of (data.peers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, local: false, referrer, topic })
+      this.emit('peer', { port: peer.port, host: peer.host, local: false, to, referrer, topic })
     }
   }
 
