@@ -23,6 +23,7 @@ class Topic extends EventEmitter {
     const name = discovery._domain(key)
 
     this._flush = []
+    this._flushPending = false
     this._discovery = discovery
     this._timeoutDht = null
     this._timeoutMdns = null
@@ -56,7 +57,7 @@ class Topic extends EventEmitter {
   }
 
   flush (cb) {
-    if (this._stream) {
+    if (this._flushPending) {
       this._flush.push(cb)
     } else {
       cb()
@@ -138,6 +139,7 @@ class Topic extends EventEmitter {
       const ann = self.announce
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
       self._timeoutDht = null
+      self._flushPending = true
       self._stream = stream
 
       stream.on('data', function (data) {
@@ -164,6 +166,7 @@ class Topic extends EventEmitter {
       function onflush (err) {
         if (flushTimeout) clearTimeout(flushTimeout)
         if (flushed) return
+        self._flushPending = false
         flushed = true
         const flush = self._flush
         self._flush = []
