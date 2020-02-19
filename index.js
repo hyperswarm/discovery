@@ -142,17 +142,18 @@ class Topic extends EventEmitter {
       self._flushPending = true
       self._stream = stream
 
-      stream.on('data', function (data) {
+      stream.on('response', onresponse)
+      stream.on('data', ondata)
+      stream.on('error', done)
+      stream.on('end', done)
+      stream.on('close', done)
+
+      function onresponse () {
         if (!flushed) {
           if (flushTimeout) flushTimeout.refresh()
           else flushTimeout = setTimeout(onflush, 1000)
         }
-        ondata(data)
-      })
-
-      stream.on('error', done)
-      stream.on('end', done)
-      stream.on('close', done)
+      }
 
       function done (err) {
         if (called || self.destroyed) return
