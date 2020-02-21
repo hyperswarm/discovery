@@ -5,7 +5,8 @@
   "main": "index.js",
   "dependencies": {
     "@hyperswarm/dht": "^3.2.0",
-    "multicast-dns": "^7.2.0"
+    "multicast-dns": "^7.2.0",
+    "timeout-refresh": "^1.0.2"
   },
   "devDependencies": {
     "dht-rpc": "^4.1.2",

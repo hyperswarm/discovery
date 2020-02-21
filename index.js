@@ -2,6 +2,7 @@ const dht = require('@hyperswarm/dht')
 const multicast = require('multicast-dns')
 const { EventEmitter } = require('events')
 const crypto = require('crypto')
+const timeout = require('timeout-refresh')
 
 const EMPTY = []
 
@@ -151,7 +152,7 @@ class Topic extends EventEmitter {
       function onresponse () {
         if (!flushed) {
           if (flushTimeout) flushTimeout.refresh()
-          else flushTimeout = setTimeout(onflush, 1000)
+          else flushTimeout = timeout(1000, onflush)
         }
       }
 
@@ -165,7 +166,7 @@ class Topic extends EventEmitter {
       }
 
       function onflush (err) {
-        if (flushTimeout) clearTimeout(flushTimeout)
+        if (flushTimeout) flushTimeout.destroy()
         if (flushed) return
         self._flushPending = false
         flushed = true
