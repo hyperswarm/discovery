@@ -1,6 +1,6 @@
 {
   "name": "@hyperswarm/discovery",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "description": "The Hyperswarm discovery stack",
   "main": "index.js",
   "dependencies": {
