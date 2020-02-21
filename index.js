@@ -387,6 +387,8 @@ class Discovery extends EventEmitter {
         name: 'referrer' + this._tld,
         data: rinfo.address
       })
+    }
+    if (r.answers.length) {
       this.mdns.response(r)
     }
   }
