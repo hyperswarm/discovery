@@ -183,7 +183,13 @@ class Discovery extends EventEmitter {
     super()
 
     if (!opts) opts = {}
-
+    
+    if (!('adaptive' in opts)) {
+      // if ephemeral is undefined, null or anything other than a boolean
+      // then this signifies adaptive ephemerality
+      opts.adaptive = typeof opts.ephemeral !== 'boolean'
+    }
+    // ephemeral defaults to true in discovery but defaults to false in dht
     opts.ephemeral = opts.ephemeral !== false
 
     this.destroyed = false
@@ -199,7 +205,9 @@ class Discovery extends EventEmitter {
     this._domains = new Map()
     this._bootstrap = this.dht.bootstrapNodes
   }
-
+  get ephemeral () {
+    return this.dht.ephemeral
+  }
   ping (cb) {
     const res = []
     const len = this._bootstrap.length
