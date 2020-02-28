@@ -144,9 +144,12 @@ class Discovery extends EventEmitter {
     super()
 
     if (!opts) opts = {}
-    // if ephemeral is undefined, null or anything other than a boolean
-    // then this signifies adaptive ephemerality
-    opts.adaptive = typeof opts.ephemeral !== 'boolean'
+    
+    if (!('adaptive' in opts)) {
+      // if ephemeral is undefined, null or anything other than a boolean
+      // then this signifies adaptive ephemerality
+      opts.adaptive = typeof opts.ephemeral !== 'boolean'
+    }
     // ephemeral defaults to true in discovery but defaults to false in dht
     opts.ephemeral = opts.ephemeral !== false
 
