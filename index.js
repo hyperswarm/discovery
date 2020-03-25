@@ -151,8 +151,13 @@ class Topic extends EventEmitter {
 
       function onresponse () {
         if (!flushed) {
-          if (flushTimeout) flushTimeout.refresh()
-          else flushTimeout = timeout(1000, onflush)
+          if (typeof dht._io._saturated === 'function' && dht._io._saturated()) {
+            if (flushTimeout) flushTimeout.destroy()
+            flushTimeout = timeout(5000, onflush)
+          } else {
+            if (flushTimeout) flushTimeout.refresh()
+            else flushTimeout = timeout(1000, onflush)
+          }
         }
       }
 
@@ -183,7 +188,7 @@ class Discovery extends EventEmitter {
     super()
 
     if (!opts) opts = {}
-    
+
     if (!('adaptive' in opts)) {
       // if ephemeral is undefined, null or anything other than a boolean
       // then this signifies adaptive ephemerality
