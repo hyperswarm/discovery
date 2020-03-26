@@ -2,7 +2,6 @@ const dht = require('@hyperswarm/dht')
 const multicast = require('multicast-dns')
 const { EventEmitter } = require('events')
 const crypto = require('crypto')
-const timeout = require('timeout-refresh')
 
 const EMPTY = []
 
@@ -135,7 +134,11 @@ class Topic extends EventEmitter {
     function loop () {
       var called = false
       var flushed = false
-      var flushTimeout = null
+
+      let maxReplies = 1
+      let maxCount = 0
+      let maxLocalReplies = 1
+      let maxLocalCount = 0
 
       const ann = self.announce
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
@@ -143,23 +146,32 @@ class Topic extends EventEmitter {
       self._flushPending = true
       self._stream = stream
 
-      stream.on('response', onresponse)
-      stream.on('data', ondata)
+      stream.on('data', function (data) {
+        if (data.peers) {
+          if (data.peers.length > maxReplies && data.peers.length < 16) {
+            maxReplies = data.peers.length
+            maxCount = 1
+          } else if (data.peers.length >= maxReplies) {
+            maxCount++
+          }
+        }
+        if (data.localPeers) {
+          if (data.localPeers.length > maxReplies && data.localPeers.length < 16) {
+            maxLocalReplies = data.localPeers.length
+            maxLocalCount = 1
+          } else if (data.localPeers.length >= maxLocalReplies) {
+            maxLocalCount++
+          }
+        }
+
+        ondata(data)
+
+        if (!flushed && (maxLocalCount > 5 || maxCount > 5)) onflush()
+      })
+
       stream.on('error', done)
       stream.on('end', done)
       stream.on('close', done)
-
-      function onresponse () {
-        if (!flushed) {
-          if (typeof dht._io._saturated === 'function' && dht._io._saturated()) {
-            if (flushTimeout) flushTimeout.destroy()
-            flushTimeout = timeout(5000, onflush)
-          } else {
-            if (flushTimeout) flushTimeout.refresh()
-            else flushTimeout = timeout(1000, onflush)
-          }
-        }
-      }
 
       function done (err) {
         if (called || self.destroyed) return
@@ -171,10 +183,9 @@ class Topic extends EventEmitter {
       }
 
       function onflush (err) {
-        if (flushTimeout) flushTimeout.destroy()
         if (flushed) return
-        self._flushPending = false
         flushed = true
+        self._flushPending = false
         const flush = self._flush
         self._flush = []
         for (const cb of flush) cb(err)
