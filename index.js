@@ -316,7 +316,8 @@ class Discovery extends EventEmitter {
       announce: {
         port: opts.port || 0,
         localAddress: opts.localAddress,
-        length: opts.length
+        length: opts.length,
+        includeLength: opts.includeLength
       }
     })
 
