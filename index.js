@@ -87,11 +87,12 @@ class Topic extends EventEmitter {
     const topic = this.key
     const referrer = data.node
     const to = data.to
+
     for (const peer of (data.localPeers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, local: true, to, referrer: null, topic })
+      this.emit('peer', { port: peer.port, host: peer.host, length: 0, local: true, to, referrer: null, topic })
     }
     for (const peer of (data.peers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, local: false, to, referrer, topic })
+      this.emit('peer', { port: peer.port, host: peer.host, length: peer.length || 0, local: false, to, referrer, topic })
     }
   }
 
@@ -139,6 +140,7 @@ class Topic extends EventEmitter {
       let maxCount = 0
       let maxLocalReplies = 1
       let maxLocalCount = 0
+      let maxLength = 0
 
       const ann = self.announce
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
@@ -153,6 +155,9 @@ class Topic extends EventEmitter {
             maxCount = 1
           } else if (data.peers.length >= maxReplies) {
             maxCount++
+          }
+          for (const peer of data.peers) {
+            if (peer.length > maxLength) maxLength = peer.length
           }
         }
         if (data.localPeers) {
@@ -188,7 +193,7 @@ class Topic extends EventEmitter {
         self._flushPending = false
         const flush = self._flush
         self._flush = []
-        for (const cb of flush) cb(err)
+        for (const cb of flush) cb(err, { maxLength })
       }
     }
   }
@@ -310,7 +315,8 @@ class Discovery extends EventEmitter {
       lookup: opts && opts.lookup,
       announce: {
         port: opts.port || 0,
-        localAddress: opts.localAddress
+        localAddress: opts.localAddress,
+        length: opts.length
       }
     })
 
