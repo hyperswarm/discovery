@@ -24,6 +24,7 @@ class Topic extends EventEmitter {
 
     this._flush = []
     this._flushPending = false
+    this._maxLength = 0
     this._discovery = discovery
     this._timeoutDht = null
     this._timeoutMdns = null
@@ -60,7 +61,7 @@ class Topic extends EventEmitter {
     if (this._flushPending) {
       this._flush.push(cb)
     } else {
-      cb()
+      cb(null, { maxLength: this._maxLength })
     }
   }
 
@@ -193,6 +194,7 @@ class Topic extends EventEmitter {
         self._flushPending = false
         const flush = self._flush
         self._flush = []
+        self._maxLength = maxLength
         for (const cb of flush) cb(err, { maxLength })
       }
     }
