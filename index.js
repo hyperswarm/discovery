@@ -122,7 +122,7 @@ class Topic extends EventEmitter {
 
     const flush = this._flush
     this._flush = []
-    for (const cb of flush) cb(null)
+    for (const cb of flush) cb(null, { maxLength: this._maxLength })
   }
 
   _startDht () {
