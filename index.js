@@ -142,6 +142,7 @@ class Topic extends EventEmitter {
       let maxLocalReplies = 1
       let maxLocalCount = 0
       let maxLength = 0
+      let confirms = 0
 
       const ann = self.announce
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
@@ -157,8 +158,17 @@ class Topic extends EventEmitter {
           } else if (data.peers.length >= maxReplies) {
             maxCount++
           }
+          let confirmed = false
           for (const peer of data.peers) {
-            if (peer.length > maxLength) maxLength = peer.length
+            if (peer.length > maxLength) {
+              maxLength = peer.length
+              confirms = 1
+              confirmed = true
+            }
+            if (!confirmed && maxLength && peer.length === maxLength) {
+              confirms++
+              confirmed = true
+            }
           }
         }
         if (data.localPeers) {
@@ -171,8 +181,7 @@ class Topic extends EventEmitter {
         }
 
         ondata(data)
-
-        if (!flushed && (maxLocalCount > 5 || maxCount > 5)) onflush()
+        if (!flushed && (confirms >= 3 || maxLocalCount >= 6 || maxCount >= 6)) onflush()
       })
 
       stream.on('error', done)
