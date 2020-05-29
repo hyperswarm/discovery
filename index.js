@@ -146,6 +146,9 @@ class Topic extends EventEmitter {
 
       const ann = self.announce
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
+
+      self.emit('updating')
+
       self._timeoutDht = null
       self._flushPending = true
       self._stream = stream
