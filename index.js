@@ -24,7 +24,6 @@ class Topic extends EventEmitter {
 
     this._flush = []
     this._flushPending = false
-    this._maxLength = 0
     this._discovery = discovery
     this._timeoutDht = null
     this._timeoutMdns = null
@@ -61,7 +60,7 @@ class Topic extends EventEmitter {
     if (this._flushPending) {
       this._flush.push(cb)
     } else {
-      cb(null, { maxLength: this._maxLength })
+      cb(null)
     }
   }
 
@@ -90,10 +89,10 @@ class Topic extends EventEmitter {
     const to = data.to
 
     for (const peer of (data.localPeers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, length: 0, local: true, to, referrer: null, topic })
+      this.emit('peer', { port: peer.port, host: peer.host, local: true, to, referrer: null, topic })
     }
     for (const peer of (data.peers || EMPTY)) {
-      this.emit('peer', { port: peer.port, host: peer.host, length: peer.length || 0, local: false, to, referrer, topic })
+      this.emit('peer', { port: peer.port, host: peer.host, local: false, to, referrer, topic })
     }
   }
 
@@ -122,7 +121,7 @@ class Topic extends EventEmitter {
 
     const flush = this._flush
     this._flush = []
-    for (const cb of flush) cb(null, { maxLength: this._maxLength })
+    for (const cb of flush) cb(null)
   }
 
   _startDht () {
@@ -141,8 +140,6 @@ class Topic extends EventEmitter {
       let maxCount = 0
       let maxLocalReplies = 1
       let maxLocalCount = 0
-      let maxLength = 0
-      let confirms = 0
 
       const ann = self.announce
       const stream = ann ? dht.announce(key, ann) : dht.lookup(key, self.lookup)
@@ -161,18 +158,6 @@ class Topic extends EventEmitter {
           } else if (data.peers.length >= maxReplies) {
             maxCount++
           }
-          let confirmed = false
-          for (const peer of data.peers) {
-            if (peer.length > maxLength) {
-              maxLength = peer.length
-              confirms = 1
-              confirmed = true
-            }
-            if (!confirmed && maxLength && peer.length === maxLength) {
-              confirms++
-              confirmed = true
-            }
-          }
         }
         if (data.localPeers) {
           if (data.localPeers.length > maxReplies && data.localPeers.length < 16) {
@@ -184,7 +169,7 @@ class Topic extends EventEmitter {
         }
 
         ondata(data)
-        if (!flushed && (confirms >= 3 || maxLocalCount >= 6 || maxCount >= 6)) onflush()
+        if (!flushed && (maxLocalCount >= 6 || maxCount >= 6)) onflush()
       })
 
       stream.on('error', done)
@@ -206,8 +191,7 @@ class Topic extends EventEmitter {
         self._flushPending = false
         const flush = self._flush
         self._flush = []
-        self._maxLength = maxLength
-        for (const cb of flush) cb(err, { maxLength })
+        for (const cb of flush) cb(err)
       }
     }
   }
@@ -329,9 +313,7 @@ class Discovery extends EventEmitter {
       lookup: opts && opts.lookup,
       announce: {
         port: opts.port || 0,
-        localAddress: opts.localAddress,
-        length: opts.length,
-        includeLength: opts.includeLength
+        localAddress: opts.localAddress
       }
     })
 
