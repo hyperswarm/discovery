@@ -191,7 +191,7 @@ class Topic extends EventEmitter {
         self._flushPending = false
         const flush = self._flush
         self._flush = []
-        for (const cb of flush) cb(err)
+        for (const cb of flush) cb(null, !err)
       }
     }
   }
