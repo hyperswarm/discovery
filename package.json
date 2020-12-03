@@ -3,12 +3,14 @@
   "version": "2.0.1",
   "description": "The Hyperswarm discovery stack",
   "main": "index.js",
+  "types": "index.d.ts",
   "dependencies": {
     "@hyperswarm/dht": "^4.0.0",
     "multicast-dns": "^7.2.2",
     "timeout-refresh": "^1.0.2"
   },
   "devDependencies": {
+    "@types/node": "^13.11.0",
     "dht-rpc": "^4.1.2",
     "standard": "^12.0.1",
     "tape": "^4.9.1"
